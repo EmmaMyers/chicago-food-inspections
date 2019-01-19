@@ -1,1 +1,53 @@
-tbd
+# Lets load the CSV Chicago Food Inspections dataset into a dataframe
+import pandas as pd
+df = pd.read_csv("Chicago_Food_Inspections.csv") 
+
+df.head()
+
+#There are few fields in the dataset of interest for us:
+#Risk
+#Results
+#Latitude
+#Longtitude
+#Inspection ID
+#We are also interested in any field that mentioned (or misspelled) the word Children
+#There are possibilities that the data entry clerk might've made some typos and misspellings and there are different words meant to indicate the same thing, some examples of this:
+#Children
+#Children's
+#Childrens
+
+#To perform different queries to retrieve the relevant inspection records, we will store the dataset in a NoSQL database engine ElasticSearch.
+
+#Experiment #1: Using Regular Expressions using the term Children
+#Experiment #2: Using Fuziness using the term Children's
+#Experiment #3: Using Fuziness using the term Children
+
+#Experiment #1: Create the query using regex
+
+query = {
+        'size' : 10000,
+        'query': {
+            'bool': {
+                    'must' : [{'match' : {'Results': 'Fail'}}, {"match" : {'Risk': {"query": 'Risk 1 (High)', "operator": "and"}} }, # same as where clasue in SQL
+
+                
+                              {"query_string": {
+                                            "query": "*Children*",  #using regex of children  to match all posssible combinations of "Children"
+                                            "fields": ["Facility Type","Violations","DBA Name"] #Multi-field matching query
+                                             }
+                            }
+                              
+           
+                            ]              
+                   }
+                }
+        }
+results = es.search(index='food_inspections', body=query, scroll='1h')
+
+sid = results['_scroll_id']
+scroll_size = results['hits']['total']
+
+print('sid = ', sid)
+print('Scroll Size = ', scroll_size)
+
+type(results)
